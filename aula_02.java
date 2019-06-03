@@ -17,17 +17,17 @@ public class Main
 		}
 		
         
-        for(int i=0; i <= 10; i++){
-            System.out.printf("valor de i: %s \n", i);
-        }
-        
-        
-        int valor = 0;
-        
-        while(valor < 5){
-            System.out.printf("valor é: %s \n", valor);
-            valor++;
-        }
+		for(int i=0; i <= 10; i++){
+		    System.out.printf("valor de i: %s \n", i);
+		}
+
+
+		int valor = 0;
+
+		while(valor < 5){
+		    System.out.printf("valor é: %s \n", valor);
+		    valor++;
+		}
 
 	}
 }
