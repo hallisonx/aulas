@@ -1,0 +1,26 @@
+// CONTEUDO DO ARQUIVO resumo.txt
+// 90,21,33,50,70,99,85,25,19,16,45,165
+
+String[] linhas;
+int indice = 0;
+
+void setup(){
+  size(300,220);
+  //noLoop();
+  frameRate(1);
+  linhas = loadStrings("resumo.txt");
+}
+
+void draw(){
+  clear();
+  if (linhas.length > 0) {
+    print(linhas[indice]);
+    String[] valores = split(linhas[indice], ',');
+    for (int i = 0; i < valores.length; i++) {
+      rect(0, i*18, int(valores[i]), 14); 
+    }
+  }
+
+  linhas = loadStrings("resumo.txt");
+  
+}
