@@ -1,0 +1,53 @@
+
+int vai = 0;
+int vem = 150;
+int COR_FUNDO = 0;
+
+int tam = 50;
+int linha = 0;
+
+void setup() {
+  size(200, 200);
+}
+
+void draw() {
+  background(COR_FUNDO);
+  mudarCor();
+  rect (vai,linha,tam,tam);  
+
+  
+  
+  /*if(vem==0){
+      vai = 0;
+      vem = 150;
+    }*/
+  
+}
+
+//função
+void mudarCor(){
+  if (keyPressed && key == CODED) {
+    if (keyCode == UP) {
+      if(linha > 0){
+        linha--;
+      }
+    }else if (keyCode == DOWN) {
+      if(linha < 150){
+        linha++;
+      }
+    }else if (keyCode == LEFT) {
+      if(vai >= 0){
+        vai--;
+      }
+    }else if (keyCode == RIGHT) {
+      if(vai <= 150){
+        vai++;
+      }
+    }
+    fill(96);
+  } else {
+    fill(255);
+  }
+  
+  
+}
