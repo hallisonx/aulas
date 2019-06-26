@@ -1,0 +1,23 @@
+
+void setup(){
+  cont = 0;
+  size(300,220);
+  noLoop();
+}
+
+void draw(){
+  
+  int[][] matriz = {{10,20,30},{90,120,150}};
+
+  int cont = 0; 
+  
+  for (int i = 0; i < matriz.length; i++) {
+    for (int j = 0; j < matriz[i].length; j++) {
+      print("i: "+i); println(" -  j: "+j);
+      rect(0, (cont++)*20, matriz[i][j], 18); // 18 = altura da barra + espaço entre elas, 14 = altura da barra
+      println(matriz[i][j]);
+    }
+    
+  }
+
+}
