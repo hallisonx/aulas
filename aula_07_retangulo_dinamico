@@ -1,53 +1,63 @@
-
-int vai = 0;
-int vem = 150;
 int COR_FUNDO = 0;
-
-int tam = 50;
+int largura = 200;
+int altura = 200;
+int tam = 25;
 int linha = 0;
 
+int coluna = 0;
+int limite = largura - tam;
+
 void setup() {
-  size(200, 200);
+  size(largura, altura);
 }
 
 void draw() {
   background(COR_FUNDO);
-  mudarCor();
-  rect (vai,linha,tam,tam);  
+  mover();
+  rect (coluna,linha,tam,tam);  
 
-  
-  
-  /*if(vem==0){
-      vai = 0;
-      vem = 150;
-    }*/
   
 }
 
 //função
-void mudarCor(){
+void mover(){
   if (keyPressed && key == CODED) {
+    
     if (keyCode == UP) {
-      if(linha > 0){
+      
+      if(linha >= 0){
         linha--;
       }
+      
     }else if (keyCode == DOWN) {
-      if(linha < 150){
+      
+      if(linha < limite){
         linha++;
       }
+      
     }else if (keyCode == LEFT) {
-      if(vai >= 0){
-        vai--;
+      
+      if(coluna >= 0){
+        coluna--;
       }
+      
     }else if (keyCode == RIGHT) {
-      if(vai <= 150){
-        vai++;
+      
+      if(coluna <= limite){
+        coluna++;
       }
+      
     }
+    
     fill(96);
+    COR_FUNDO = 170;
+    
   } else {
+    
     fill(255);
+    COR_FUNDO = 0;
+    
   }
   
   
-}
+}// fim mover()
