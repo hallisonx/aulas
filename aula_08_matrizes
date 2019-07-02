@@ -1,0 +1,36 @@
+int tamQuad = 10;
+int cor = 0;
+
+void setup(){
+  noLoop();
+}
+void draw(){
+  int[][] matriz = {
+    {10,20,30,40,50,60,70}, 
+    {10,20,30,40,50,60,70}, 
+    {10,20,30,40,50,60,70}, 
+    {10,20,30,40,50,60,70}, 
+    {10,20,30,40,50,60,70},
+    {10,20,30,40,50,60,70}, 
+    {10,20,30,40,50,60,70}
+  };
+  
+  print(matriz[4].length);
+  
+  for(int i=0; i<matriz.length; i++){
+    
+    for(int j=0; j<matriz[0].length; j++){
+
+      print(cor);
+      fill(cor);
+      rect(matriz[i][j], i * tamQuad , tamQuad, tamQuad);
+      
+      if(cor==0){
+        cor = 255;
+      }else if(cor==255) {
+        cor=0;
+      }
+      
+    }
+  }
+}
