@@ -1,0 +1,50 @@
+int tamQuad = 50;
+int cor = 0;
+int vez = 0;
+void setup(){
+  size(180,180);
+  //noLoop();
+  int[][] matriz = {
+    {0,50,100}, 
+    {0,50,100}, 
+    {0,50,100}
+    
+  };
+  
+  for(int i=0; i<matriz.length; i++){
+    
+    for(int j=0; j<matriz[0].length; j++){
+
+      print(cor);
+      fill(cor);
+      rect(matriz[i][j], i * tamQuad , tamQuad, tamQuad);
+       
+      
+      if(cor==0){
+        cor = 255;
+      }else if(cor==255) {
+        cor=0;
+      }
+      
+    }
+  }
+}
+
+void draw(){
+  
+  if (mousePressed == true) {
+    
+    if(mouseButton == LEFT){
+      fill(128, 0, 0);
+    }else if(mouseButton == RIGHT){
+      fill(0, 128, 0);
+    }
+    ellipse(mouseX, mouseY , tamQuad/2, tamQuad/2);
+    
+  } else {
+    cursor(HAND);
+  }
+
+}
+
+
