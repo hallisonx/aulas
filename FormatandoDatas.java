@@ -61,35 +61,7 @@ public class FormatandoDatas {
 	            	saida = saida.plusDays(1);
 	            }
 	            
-	            int qtdHs1T = intervalo.getHour() - entrada.getHour(); // obtem a quantidade de horas do 1ºT
-	            int qtdHs2T = saida.getHour() - retorno.getHour(); // obtem a quantidade de horas do 2ºT
-	            imprimirHorasPorTurno(qtdHs1T, qtdHs2T);
-	            
-	            int qtdHorasNoturnas = 0;
-	            
-	            LocalDateTime minHoraSemAdicional = LocalDateTime.of(entrada.getYear(), entrada.getMonth(), entrada.getDayOfMonth(), 21, 59);
-	            LocalDateTime maxHoraSemAdicional = LocalDateTime.of(entrada.getYear(), entrada.getMonth(), entrada.getDayOfMonth(), 5, 00).plusDays(1);
-	            
-	            //Calcula as horas noturnas do 1T
-	            LocalDateTime t1 = entrada;
-	            for(int i=0; i < qtdHs1T; i++) {
-	            	if(t1.isAfter(minHoraSemAdicional) && t1.isBefore(maxHoraSemAdicional)) {
-	            		qtdHorasNoturnas++;
-	            	}
-	            	t1 = t1.plusHours(1);
-	            }
-	            
-	          //Calcula as horas noturnas do 2T
-	            LocalDateTime t2 = retorno;
-	            for(int i=0; i < qtdHs2T; i++) {
-	            	if(t2.isAfter(minHoraSemAdicional) && t2.isBefore(maxHoraSemAdicional)) {
-	            		qtdHorasNoturnas++;
-	            	}
-	            	t2 = t2.plusHours(1);
-	            }
-	            
-	            System.out.println("Qtd Hs Noturnas: " + qtdHorasNoturnas);
-	            
+	            int qtdHorasNoturnas = calcularHorasComAdicionalNoturno(entrada, intervalo, retorno, saida);
 	            
 	            
 	            //imprimirHorariosComData(entrada, intervalo, retorno, saida);
@@ -110,23 +82,64 @@ public class FormatandoDatas {
 	            imprimirResultados(tempoTotal, tempoReal, horasExtras);
 	    	}
 	        
-	        
 	        imprimirTotalHorasExtras(totalHorasExtras);
 			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
+	}
+
+	public static int calcularHorasComAdicionalNoturno(LocalDateTime entrada, LocalDateTime intervalo, LocalDateTime retorno, LocalDateTime saida) {
 		
+		int qtdHs1T = 0;
+        if(intervalo.getHour() < entrada.getHour()) {
+        	qtdHs1T = intervalo.getHour() + 24 - entrada.getHour();
+        }else {
+        	qtdHs1T = intervalo.getHour() - entrada.getHour(); // obtem a quantidade de horas do 1ºT
+        }
+        
+        int qtdHs2T = 0;
+        if(saida.getHour() < retorno.getHour()) {
+        	qtdHs2T = saida.getHour() + 24 - retorno.getHour();
+        }else {
+        	qtdHs2T = saida.getHour() - retorno.getHour(); // obtem a quantidade de horas do 1ºT
+        }
+        
+		imprimirHorasPorTurno(qtdHs1T, qtdHs2T);
 		
-	    
-	    
+		int qtdHorasNoturnas = 0;
+		
+		LocalDateTime minHoraSemAdicional = LocalDateTime.of(entrada.getYear(), entrada.getMonth(), entrada.getDayOfMonth(), 21, 59);
+		LocalDateTime maxHoraSemAdicional = LocalDateTime.of(entrada.getYear(), entrada.getMonth(), entrada.getDayOfMonth(), 5, 00).plusDays(1);
+		
+		//Calcula as horas noturnas do 1T
+		LocalDateTime t1 = entrada;
+		for(int i=0; i < qtdHs1T; i++) {
+			if(t1.isAfter(minHoraSemAdicional) && t1.isBefore(maxHoraSemAdicional)) {
+				qtdHorasNoturnas++;
+			}
+			t1 = t1.plusHours(1);
+		}
+		
+        //Calcula as horas noturnas do 2T
+		LocalDateTime t2 = retorno;
+		for(int i=0; i < qtdHs2T; i++) {
+			if(t2.isAfter(minHoraSemAdicional) && t2.isBefore(maxHoraSemAdicional)) {
+				qtdHorasNoturnas++;
+			}
+			t2 = t2.plusHours(1);
+		}
+		
+		System.out.println("Horas com adicional noturno: " + qtdHorasNoturnas + "hs");
+		
+		return qtdHorasNoturnas;
 	}
 
 	public static void imprimirHorasPorTurno(int qtdHs1T, int qtdHs2T) {
-		StringJoiner strj = new StringJoiner(" | ");
-		strj.add(String.valueOf(qtdHs1T));
-		strj.add(String.valueOf(qtdHs2T));
+		StringJoiner strj = new StringJoiner("  |  ");
+		strj.add("1ºT= " + qtdHs1T + "hs");
+		strj.add("2ºT= " + qtdHs2T + "hs");
 		System.out.println(strj.toString());
 	}
 
