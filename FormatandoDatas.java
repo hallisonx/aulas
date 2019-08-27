@@ -13,12 +13,22 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
 public class FormatandoDatas {
-
+	
+	private static final double MULTIPLICADOR_AD_NOT = 1.147227533460803;
+	private static final int HORAS_JORNADA_DIARIA = 7;
+	private static final int MINUTOS_JORNADA_DIARIA = 20;
+	
 	public static void main(String[] args) {
+		calcularPonto(System.getProperty("user.home") + "\\Documents\\Processing\\ponto\\registros.csv");
+	}
+
+	public static void calcularPonto(String caminhoArquivo) {
 		DateTimeFormatter formatacao = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 		LocalDateTime entrada;
 		LocalDateTime intervalo;
@@ -28,8 +38,8 @@ public class FormatandoDatas {
 	
 		try {
 			//Lendo arquivo
-			CSVReader csvReader = lerArquivoCSV( Paths.get(System.getProperty("user.home"), "Documents/Processing/ponto/registros.csv") );
-
+			CSVReader csvReader = lerArquivoCSV(Paths.get(caminhoArquivo) );
+			
 	        List<String[]> registros = csvReader.readAll(); // lê os registros do arquivo
 	        
 	        for (String[] registro : registros) {
@@ -38,17 +48,8 @@ public class FormatandoDatas {
 	            entrada = LocalDateTime.parse(   registro[0] + " " + registro[1], formatacao ); // converte para LocalDateTime (Ex: 01/06/2019 08:00)
 	            intervalo = LocalDateTime.parse( registro[0] + " " + registro[2], formatacao );
 	            retorno = LocalDateTime.parse(   registro[0] + " " + registro[3], formatacao );
-	            saida = LocalDateTime.parse(     registro[0] + " " + registro[5], formatacao );
-	            
-				/*
-				 * Duration duracaoPrimeiroTurno = Duration.between(entrada, intervalo); long
-				 * qtdHoras1T = duracaoPrimeiroTurno.getSeconds() / 60 / 60; long
-				 * qtdHorasComAdicional = 0; LocalTime h = LocalTime.of(entrada.getHour(),
-				 * entrada.getMinute()); for(int i=0; i < qtdHoras1T; i++) {
-				 * if(h.isAfter(maxHoraSemAdicional) && h.isBefore(minHoraSemAdicional)) {
-				 * qtdHorasComAdicional++; } h.plusHours(1); }
-				 * System.out.println("qtde hs com add: "+qtdHorasComAdicional);
-				 */
+	            saida = LocalDateTime.parse(     registro[0] + " " + registro[4], formatacao );
+	
 	            
 	            if(intervalo.getHour() >= 0 && intervalo.getHour() < entrada.getHour()) {
 	            	intervalo = intervalo.plusDays(1);
@@ -61,9 +62,65 @@ public class FormatandoDatas {
 	            	saida = saida.plusDays(1);
 	            }
 	            
-	            int qtdHorasNoturnas = calcularHorasComAdicionalNoturno(entrada, intervalo, retorno, saida);
+	            int qtdHs1T = 0;
+	            if(intervalo.getHour() < entrada.getHour()) {
+	            	qtdHs1T = intervalo.getHour() + 24 - entrada.getHour();
+	            }else {
+	            	qtdHs1T = intervalo.getHour() - entrada.getHour(); // obtem a quantidade de horas do 1ºT
+	            }
 	            
+	            int restoMin1T = (60 - entrada.getMinute()) + (intervalo.getMinute()); // 22h15 as 24h45 ; 60-15 + 60-45 = 60
+	            int qtdMin1T =  (qtdHs1T *60) - 60 + restoMin1T;
+            	//System.out.println(qtdHs1T +":"+ (restoMin1T-60) );
+            	
 	            
+	            int qtdHs2T = 0;
+	            if(saida.getHour() < retorno.getHour()) {
+	            	qtdHs2T = saida.getHour() + 24 - retorno.getHour();
+	            }else {
+	            	qtdHs2T = saida.getHour() - retorno.getHour(); // obtem a quantidade de horas do 1ºT
+	            }
+	            
+	            int restoMin2T = (60 - retorno.getMinute()) + (saida.getMinute()); // 22h15 as 24h45 ; 60-15 + 60-45 = 60
+            	int qtdMin2T =  (qtdHs2T *60) - 60 + restoMin2T;
+	            //System.out.println(qtdHs2T +":"+ (restoMin2T-60) );
+            	
+	            //imprimirHorasPorTurno(qtdHs1T, qtdHs2T);
+	            
+	            //int qtdHorasNoturnas = 0;
+	            int qtdMinutosNoturnos = 0;
+	            
+	            LocalDateTime mxHoraSemAdicional = LocalDateTime.of(entrada.getYear(), entrada.getMonth(), entrada.getDayOfMonth(), 21, 59);
+	            LocalDateTime mnHoraSemAdicional = LocalDateTime.of(entrada.getYear(), entrada.getMonth(), entrada.getDayOfMonth(), 5, 00).plusDays(1);
+	            
+	            //Calcula as horas noturnas do 1T
+	            LocalDateTime t1 = entrada;
+	            for(int i=0; i < qtdMin1T; i++) {
+	            	if(t1.isAfter(mxHoraSemAdicional) && t1.isBefore(mnHoraSemAdicional)) {
+	            		qtdMinutosNoturnos++;
+	            	}
+	            	t1 = t1.plusMinutes(1);
+	            }
+	            
+	          //Calcula as horas noturnas do 2T
+	            LocalDateTime t2 = retorno;
+	            for(int i=0; i < qtdMin2T; i++) {
+	            	if(t2.isAfter(mxHoraSemAdicional) && t2.isBefore(mnHoraSemAdicional)) {
+	            		qtdMinutosNoturnos++;
+	            	}
+	            	t2 = t2.plusMinutes(1);
+	            }
+	            
+	            double minutosComAd = qtdMinutosNoturnos * MULTIPLICADOR_AD_NOT;
+	            
+	            String horasNoturnas = ""+Math.round(qtdMinutosNoturnos / 60);
+	            LocalTime tempoNot = LocalTime.of(new Integer(horasNoturnas), (int)qtdMinutosNoturnos % 60);
+	            System.out.println("Hora Noturna:                " + tempoNot);
+	           
+	            String horasNoturnasConvert = ""+Math.round(minutosComAd / 60);
+	            LocalTime tempoAdNot = LocalTime.of(new Integer(horasNoturnasConvert), (int)minutosComAd % 60);
+	            System.out.println("Hora Noturna Convertida:     " + tempoAdNot);
+	            	            
 	            //imprimirHorariosComData(entrada, intervalo, retorno, saida);
 	            
 	            LocalTime tempoTotal = LocalTime.of((int)entrada.until(saida, ChronoUnit.HOURS), (int)entrada.until(saida, ChronoUnit.MINUTES) % 60);
@@ -75,12 +132,13 @@ public class FormatandoDatas {
 	            if(tempoReal.getHour() < 8) { // se tempo menor que 8:00 (ex: 7:59)
 	            	horasExtras = LocalTime.of(0, 0);
 	            }else {
-	            	horasExtras = tempoReal.minusHours(8);
+	            	horasExtras = tempoReal.minusHours(HORAS_JORNADA_DIARIA).minusMinutes(MINUTOS_JORNADA_DIARIA);
 	            	totalHorasExtras = calcularHorasExtras(totalHorasExtras, horasExtras);
 	            }
 	            
 	            imprimirResultados(tempoTotal, tempoReal, horasExtras);
 	    	}
+	        
 	        
 	        imprimirTotalHorasExtras(totalHorasExtras);
 			
@@ -88,95 +146,54 @@ public class FormatandoDatas {
 			e.printStackTrace();
 		}
 
+		
+		
+	    
+	    
 	}
 
-	public static int calcularHorasComAdicionalNoturno(LocalDateTime entrada, LocalDateTime intervalo, LocalDateTime retorno, LocalDateTime saida) {
-		
-		int qtdHs1T = 0;
-        if(intervalo.getHour() < entrada.getHour()) {
-        	qtdHs1T = intervalo.getHour() + 24 - entrada.getHour();
-        }else {
-        	qtdHs1T = intervalo.getHour() - entrada.getHour(); // obtem a quantidade de horas do 1ºT
-        }
-        
-        int qtdHs2T = 0;
-        if(saida.getHour() < retorno.getHour()) {
-        	qtdHs2T = saida.getHour() + 24 - retorno.getHour();
-        }else {
-        	qtdHs2T = saida.getHour() - retorno.getHour(); // obtem a quantidade de horas do 1ºT
-        }
-        
-		imprimirHorasPorTurno(qtdHs1T, qtdHs2T);
-		
-		int qtdHorasNoturnas = 0;
-		
-		LocalDateTime minHoraSemAdicional = LocalDateTime.of(entrada.getYear(), entrada.getMonth(), entrada.getDayOfMonth(), 21, 59);
-		LocalDateTime maxHoraSemAdicional = LocalDateTime.of(entrada.getYear(), entrada.getMonth(), entrada.getDayOfMonth(), 5, 00).plusDays(1);
-		
-		//Calcula as horas noturnas do 1T
-		LocalDateTime t1 = entrada;
-		for(int i=0; i < qtdHs1T; i++) {
-			if(t1.isAfter(minHoraSemAdicional) && t1.isBefore(maxHoraSemAdicional)) {
-				qtdHorasNoturnas++;
-			}
-			t1 = t1.plusHours(1);
-		}
-		
-        //Calcula as horas noturnas do 2T
-		LocalDateTime t2 = retorno;
-		for(int i=0; i < qtdHs2T; i++) {
-			if(t2.isAfter(minHoraSemAdicional) && t2.isBefore(maxHoraSemAdicional)) {
-				qtdHorasNoturnas++;
-			}
-			t2 = t2.plusHours(1);
-		}
-		
-		System.out.println("Horas com adicional noturno: " + qtdHorasNoturnas + "hs");
-		
-		return qtdHorasNoturnas;
-	}
-
-	public static void imprimirHorasPorTurno(int qtdHs1T, int qtdHs2T) {
-		StringJoiner strj = new StringJoiner("  |  ");
-		strj.add("1ºT= " + qtdHs1T + "hs");
-		strj.add("2ºT= " + qtdHs2T + "hs");
+	private static void imprimirHorasPorTurno(int qtdHs1T, int qtdHs2T) {
+		StringJoiner strj = new StringJoiner(" | ");
+		strj.add(String.valueOf(qtdHs1T));
+		strj.add(String.valueOf(qtdHs2T));
 		System.out.println(strj.toString());
 	}
 
-	public static void imprimirTotalHorasExtras(LocalTime totalHorasExtras) {
+	private static void imprimirTotalHorasExtras(LocalTime totalHorasExtras) {
 		System.out.println("=======================================");
 		System.out.println("Total Horas Extras: " + totalHorasExtras);
 		System.out.println("=======================================");
 	}
 
-	public static void imprimirResultados(LocalTime tempoTotal, LocalTime tempoReal, LocalTime horasExtras) {
+	private static void imprimirResultados(LocalTime tempoTotal, LocalTime tempoReal, LocalTime horasExtras) {
 		System.out.println("Tempo total nominal:         " + tempoTotal);
 		System.out.println("Tempo total menos intervalo: " + tempoReal);
 		System.out.println("Horas extras:                " + horasExtras);
 		System.out.println("-------------------------------------------------------------------------------------------");
 	}
 
-	public static LocalTime calcularHorasExtras(LocalTime totalHorasExtras, LocalTime horasExtras) {
+	private static LocalTime calcularHorasExtras(LocalTime totalHorasExtras, LocalTime horasExtras) {
 		totalHorasExtras = totalHorasExtras.plusHours(horasExtras.getHour());
 		totalHorasExtras = totalHorasExtras.plusMinutes(horasExtras.getMinute());
 		return totalHorasExtras;
 	}
 
-	public static CSVReader lerArquivoCSV(Path caminho) throws IOException {
+	private static CSVReader lerArquivoCSV(Path caminho) throws IOException {
 		Reader reader = Files.newBufferedReader(caminho);
-		CSVReader csvReader = new CSVReaderBuilder(reader).withSkipLines(1).build();
+		CSVParser parser = new CSVParserBuilder().withSeparator(';').build();
+		CSVReader csvReader = new CSVReaderBuilder(reader).withCSVParser(parser).withSkipLines(1).build();
 		return csvReader;
 	}
 
-	public static void imprimirLinhaArquivoCSV(String[] registro) {
+	private static void imprimirLinhaArquivoCSV(String[] registro) {
 		System.out.println(registro[0] +
 		                " | " + registro[1] +
 		                " | " + registro[2] +
 		                " | " + registro[3] +
-		                " | " + registro[5]);
+		                " | " + registro[4]);
 	}
 
-	public static void imprimirHorariosComData(LocalDateTime entrada, LocalDateTime intervalo, LocalDateTime retorno, LocalDateTime saida) {
+	private static void imprimirHorariosComData(LocalDateTime entrada, LocalDateTime intervalo, LocalDateTime retorno, LocalDateTime saida) {
 		System.out.println(entrada);
 		System.out.println(intervalo);
 		System.out.println(retorno);
